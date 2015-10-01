@@ -36,10 +36,11 @@ public class Redstone
 	public double probToSpawn;
 	public String path = "RedstoneVeinSystem";
 	public VeinSwitch chooseType;
-	
+	public BiomeModifiers modifiers;
 	public Redstone()
 	{
 		probToSpawn = 0.9;
+		modifiers = new BiomeModifiers(path);
 		primaryVein = new PrimaryVein(path);
 		secondaryVein = new SecondaryVein(path);
 		tertiaryVein = new TertiaryVein(path);
@@ -48,6 +49,7 @@ public class Redstone
 	public void readWriteConfigs(FileConfiguration configs)
 	{
 		setProbs(configs);
+		modifiers.setDefaults(configs);
 		chooseType.logValues(configs);
 		primaryVein.setDefaults(configs);
 		secondaryVein.setDefaults(configs);

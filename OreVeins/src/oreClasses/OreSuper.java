@@ -24,17 +24,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-import mcListenersAndPopulators.VeinDrawer;
+import mcListenersAndPopulators.CreateOreThread;
+import mcListenersAndPopulators.IdentifyOres;
+import net.minecraft.util.io.netty.util.internal.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Material;
+import org.bukkit.scheduler.BukkitTask;
 
 import com.icloud.kevinmendoza.OreVeins.DebugLogger;
+import com.icloud.kevinmendoza.OreVeins.OreVeins;
 import com.icloud.kevinmendoza.OreVeins.PointMapping;
 
 import defaultPackadge.BIF;
 import defaultPackadge.Coal;
-import defaultPackadge.Defaults;
+import defaultPackadge.Default;
 import defaultPackadge.Diamond;
 import defaultPackadge.Emerald;
 import defaultPackadge.Gold;
@@ -56,6 +61,7 @@ import geometryClasses.Ellipse;
 import geometryClasses.Line;
 import geometryClasses.ThreePoint;
 import geometryClasses.TwoPoint;
+import geometryClasses.VeinMember;
 
 public abstract class OreSuper 
 {
@@ -65,21 +71,62 @@ public abstract class OreSuper
 	protected ArrayList<ThreePoint> nodes= new ArrayList<ThreePoint>();;//branch points
 	protected ArrayList<ThreePoint> centers = new ArrayList<ThreePoint>();//all the points that will be drawn by the vein
 	protected ThreePoint[] crossSection;//cross section of the vein
-	protected Random rand = new Random();
-	protected Coal coal = Defaults.coal;
-	protected BIF bif = Defaults.bif;
-	protected Iron iron = Defaults.iron;
-	protected Gold gold = Defaults.gold;
-	protected Redstone redstone = Defaults.redstone;
-	protected Lapiz lapiz = Defaults.lapiz;
-	protected Emerald emerald = Defaults.emerald;
-	protected Diamond diamond = Defaults.diamond;
-	
+	protected Coal coal = OreVeins.theDefaults.coal;
+	protected BIF bif = OreVeins.theDefaults.bif;
+	protected Iron iron = OreVeins.theDefaults.iron;
+	protected Gold gold = OreVeins.theDefaults.gold;
+	protected Redstone redstone = OreVeins.theDefaults.redstone;
+	protected Lapiz lapiz = OreVeins.theDefaults.lapiz;
+	protected Emerald emerald = OreVeins.theDefaults.emerald;
+	protected Diamond diamond = OreVeins.theDefaults.diamond;
+	protected String biome;
+	protected Material material;
+	protected byte dip;
+	protected byte theStrike;
 	protected abstract void initializeDefaults();
 	
 	protected abstract void  addSection(ThreePoint centerPoint);
 	
 	protected abstract void makeBonanza(ThreePoint center);
+	
+	protected void getActualDipStrike(ThreePoint start, ThreePoint end)
+	{
+		//strike
+		if( start.x-end.x==0)
+		{
+			 theStrike = 0;
+		}
+		else
+		{
+			double temp = Math.atan2((double)(start.x-end.x), (double)(start.z-end.z));
+			temp = temp/Math.PI;
+			temp = Math.round(temp*4)/4;
+			if(temp<0)
+				temp = 8 - temp;
+			theStrike = (byte)temp;
+		}
+		//dip
+		if( start.y-end.y==0)
+		{
+			 dip = 3;
+		}
+		else if(ore.contains("BIF") || ore.contains("COAL"))
+		{
+			dip = 5;
+		}
+		else
+		{
+			double distance = Math.sqrt(
+					Math.pow((start.x-end.x),2) + 
+					Math.pow((start.y-end.y),2) + 
+					Math.pow((start.z-end.z),2));
+			double temp = Math.asin((start.y-end.y) / distance);
+			temp = temp/Math.PI;
+			temp = Math.round(temp*2)/2 +2;
+			dip = (byte)temp;
+		}
+		
+	}
 	
 	protected void addPoints(ArrayList<ThreePoint> iterateOverPoints)
 	{
@@ -90,18 +137,39 @@ public abstract class OreSuper
 		}
 	}
 	
-	public void drawPoints()
+	protected void pushToMainPointMap(Material mat, ArrayList<ThreePoint> centers)
 	{
-		//DebugLogger.console("drawing veins");
-		HashMap<String,String[][][]> drawableChunks = PointMapping.getDrawListAndRemove();
-		TwoPoint drawingChunk;
-		Chunk chunkObj;
-		for(String entry: drawableChunks.keySet())
+		String key;
+		HashMap<String,VeinMember[][][]> tempHashMap = new HashMap<String,VeinMember[][][]>();
+		ThreePoint thePoint;
+		VeinMember[][][] tempArray;
+		VeinMember addingMember;
+		for(int i =0;i<centers.size();i++)
 		{
-			drawingChunk = new TwoPoint(entry);
-			chunkObj = Bukkit.getWorlds().get(0).getChunkAt(drawingChunk.x, drawingChunk.z);
-			VeinDrawer.drawVein(drawableChunks.get(entry), chunkObj);
+			key = centers.get(i).toChunkCoord();
+			if(centers.get(i).y<130 && centers.get(i).y > 1)
+			{
+				if(tempHashMap.containsKey(key))
+				{
+					tempArray = tempHashMap.get(key);
+					thePoint = centers.get(i);
+					thePoint.shiftCoords();
+					addingMember = new VeinMember(mat, dip, theStrike);
+					tempArray[thePoint.dx][thePoint.y][thePoint.dz] = addingMember;
+					tempHashMap.put(key, tempArray);
+				}
+				else
+				{
+					tempArray = new VeinMember[16][132][16];
+					thePoint = centers.get(i);
+					thePoint.shiftCoords();
+					addingMember = new VeinMember(mat, dip, theStrike);
+					tempArray[thePoint.dx][thePoint.y][thePoint.dz] = addingMember;
+					tempHashMap.put(key, tempArray);
+				}
+			}
 		}
+		BukkitTask mergeOres = new OreCombiner(tempHashMap).runTask(OreVeins.getPlugin(OreVeins.class));
 	}
 	
 }

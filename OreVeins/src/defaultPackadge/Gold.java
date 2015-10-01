@@ -36,9 +36,11 @@ public class Gold
 	public double probToSpawn;
 	public String path = "GoldVeinSystem";
 	public VeinSwitch chooseType;
+	public BiomeModifiers modifiers;
 	public Gold()
 	{
 		probToSpawn = 0.6;
+		modifiers = new BiomeModifiers(path);
 		primaryVein = new PrimaryVein(path);
 		secondaryVein = new SecondaryVein(path);
 		tertiaryVein = new TertiaryVein(path);
@@ -47,6 +49,7 @@ public class Gold
 	public void readWriteConfigs(FileConfiguration configs)
 	{
 		setProbs(configs);
+		modifiers.setDefaults(configs);
 		chooseType.logValues(configs);
 		primaryVein.setDefaults(configs);
 		secondaryVein.setDefaults(configs);

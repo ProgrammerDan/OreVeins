@@ -37,6 +37,7 @@ public class Coal
 	public Height height;
 	public Branch levels;
 	public String string;
+	public BiomeModifiers modifiers;
 	public Coal() 
 	{
 		string = "CoalBeds";
@@ -46,11 +47,13 @@ public class Coal
 		width        = new Width(string);
 		height       = new Height(string);
 		levels 		 = new Branch(string);
+		modifiers    = new BiomeModifiers(string);
 	}
 
 	public void setDefaults(FileConfiguration config)
 	{
 		setProbs(config);
+		modifiers.setDefaults(config);
 		grade.logValues(config);
 		levels.logValues(config);
 		strike.logValues(config);

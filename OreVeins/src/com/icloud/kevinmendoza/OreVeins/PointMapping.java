@@ -23,6 +23,7 @@ package com.icloud.kevinmendoza.OreVeins;
 import fileIO.VeinChunkReadWrite;
 import geometryClasses.ThreePoint;
 import geometryClasses.TwoPoint;
+import geometryClasses.VeinMember;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,159 +35,146 @@ import org.bukkit.block.Block;
 
 public class PointMapping 
 {
-	private static HashMap<String,String[][][]> addedPoints;
+	private static HashMap<String,VeinMember[][][]> addedPoints;
 	//^contains all points added in by ore generation
 	private static HashMap<String,Boolean> populatedList;
 	//^contains list of all chunks already generated
-	private static HashMap<String,Boolean> loadedAndGenerated;
 	//^contains list of all chunks already generated and Loaded?
 	
-	private static void initializeMaps()
+	public static void initializeMaps()
 	{
-		addedPoints = new HashMap<String,String[][][]>();
+		HashMap<String,VeinMember[][][]> tempOne;
+		HashMap<String,Boolean> tempTwo;
+		addedPoints = new HashMap<String,VeinMember[][][]>();
 		populatedList = new HashMap<String,Boolean>();
-		loadedAndGenerated = new HashMap<String,Boolean>();
-	}
-	
-	public static void populatePopList()
-	{
-		initializeMaps();
-		HashMap<String,Boolean> temp;
-		temp = VeinChunkReadWrite.read();
-		if(temp!=null)
+		tempOne = VeinChunkReadWrite.readPoints();
+		tempTwo = VeinChunkReadWrite.readList();
+		if(tempOne!=null)
 		{
-			populatedList=temp;
+			addedPoints=tempOne;
+		}
+		if(tempTwo!=null)
+		{
+			populatedList=tempTwo;
 		}
 	}
 	
-	public static void addToPopList(TwoPoint chunk)
+	public static void saveMaps()
 	{
-		populatedList.remove(chunk.toString());
-		populatedList.put(chunk.toString(),true);
+		VeinChunkReadWrite.saveMaps(addedPoints,populatedList);
 	}
 	
-	private static void mergeStrings(String key, String[][][] newStringArray) 
+ 	public static void addToPopList(TwoPoint chunk)
 	{
-		String[][][] oldOreArray = addedPoints.get(key);
-		String oldOre;
-		String newOre;
-		if(oldOreArray!=null)
+		populatedList.remove(chunk.toString());
+		populatedList.put(chunk.toString(),false);
+	}
+	
+	public static void mergeStrings(String key, VeinMember[][][] newOres) 
+	{
+		if(addedPoints.containsKey(key) || addedPoints.get(key)!=null)
 		{
-			for(int x=0;x<16;x++)
+			VeinMember[][][] oldOres = addedPoints.get(key);
+			for(int x= 0;x<16;x++)
 			{
-				for(int z=0;z<16;z++)
+				for(int y = 1;y<131;y++)
 				{
-					for(int y=1;y<128;y++)
+					for(int z = 0; z<16;z++)
 					{
-						newOre = newStringArray[x][y][z];
-						oldOre = oldOreArray[x][y][z];
-						if(newOre!=null)
+						if(oldOres[x][y][z]==null && newOres[x][y][z]!=null)
 						{
-							if(oldOre==null || oldOre.contains("COAL"))
-							{
-								oldOreArray[x][y][z] = newOre;
-							}
+							oldOres[x][y][z] = newOres[x][y][z];
+						}
+						else if(oldOres[x][y][z]!=null && newOres[x][y][z]!=null)
+						{
+							oldOres[x][y][z] = newOres[x][y][z];
 						}
 					}
 				}
 			}
 			addedPoints.remove(key);
-			addedPoints.put(key, oldOreArray);
+			addedPoints.put(key,  oldOres);
 		}
 		else
 		{
-			addedPoints.put(key, newStringArray);
+			addedPoints.put(key, newOres);
 		}
 	}
-	
-	public static void addToPoints(TwoPoint chunk) 
-	{
-		
-		String[][][] newStringArray = VeinChunkReadWrite.read(chunk.toString());
-		if(newStringArray!=null)
-			mergeStrings(chunk.toString(),newStringArray);
-	}
-	
-	public static void addArrayToPoints(ArrayList<ThreePoint> thePoints, String blockType)
-	{
-		String key;
-		HashMap<String,String[][][]> tempHashMap = new HashMap<String,String[][][]>();
-		ThreePoint thePoint;
-		String[][][] Matrix;
-		for(int i =0;i<thePoints.size();i++)
-		{
-			key = thePoints.get(i).toChunkCoord();
-			if(thePoints.get(i).y<127 && thePoints.get(i).y > 1)
-			{
-				if(tempHashMap.containsKey(key))
-				{
-					Matrix = tempHashMap.get(key);
-					thePoint = thePoints.get(i);
-					thePoint.shiftCoords();
-					Matrix[thePoint.dx][thePoint.y][thePoint.dz] = blockType;
-					tempHashMap.put(key, Matrix);
-				}
-				else
-				{
-					thePoint = thePoints.get(i);
-					thePoint.shiftCoords();
-					Matrix = new String[16][128][16];
-					Matrix[thePoint.dx][thePoint.y][thePoint.dz] = blockType;
-					tempHashMap.put(key, Matrix);
-				}
-			}
-		}
-		for(String entry: tempHashMap.keySet())
-		{
-			mergeStrings(entry,tempHashMap.get(entry));
-		}
-	}
+
+//	//public static void addArrayToPoints(ArrayList<ThreePoint> thePoints, String blockType)
+//	{
+//		String key;
+//		HashMap<String,String[][][]> tempHashMap = new HashMap<String,String[][][]>();
+//		ThreePoint thePoint;
+//		String[][][] Matrix;
+//		for(int i =0;i<thePoints.size();i++)
+//		{
+//			key = thePoints.get(i).toChunkCoord();
+//			if(thePoints.get(i).y<127 && thePoints.get(i).y > 1)
+//			{
+//				if(tempHashMap.containsKey(key))
+//				{
+//					Matrix = tempHashMap.get(key);
+//					thePoint = thePoints.get(i);
+//					thePoint.shiftCoords();
+//					Matrix[thePoint.dx][thePoint.y][thePoint.dz] = blockType;
+//					tempHashMap.put(key, Matrix);
+//				}
+//				else
+//				{
+//					thePoint = thePoints.get(i);
+//					thePoint.shiftCoords();
+//					Matrix = new String[16][128][16];
+//					Matrix[thePoint.dx][thePoint.y][thePoint.dz] = blockType;
+//					tempHashMap.put(key, Matrix);
+//				}
+//			}
+//		}
+//		for(String entry: tempHashMap.keySet())
+//		{
+//			mergeStrings(entry,tempHashMap.get(entry));
+//		}
+//	}
 	
 	public static void removePoints(TwoPoint chunk) 
 	{
 		addedPoints.remove(chunk.toString());
 	}
 	
-	public static void addToLoaded(TwoPoint chunk) 
+	public static HashMap<String,VeinMember[][][]> getDrawListAndRemove() 
 	{
-		loadedAndGenerated.remove(chunk.toString());
-		loadedAndGenerated.put(chunk.toString(),true);
-	}
-	
-	public static void removeFromLoaded(TwoPoint chunk) 
-	{
-		loadedAndGenerated.remove(chunk.toString());
-	}
-	
-	public static HashMap<String,String[][][]> getDrawListAndRemove() 
-	{
-		HashMap<String,String[][][]> drawList = new HashMap<String,String[][][]>();
-		for(String entry : loadedAndGenerated.keySet())
+		HashMap<String,VeinMember[][][]> drawList = new HashMap<String,VeinMember[][][]>();
+		TwoPoint chunkCoord;
+		HashMap<String,Boolean> tempMap = new HashMap<String,Boolean>();
+		for(String entry : populatedList.keySet())//for all the removed ore chunks
 		{
-			if(addedPoints.containsKey(entry))
+			chunkCoord = new TwoPoint(entry);
+			if(!populatedList.get(entry))
 			{
-				if(addedPoints.get(entry)!=null)
+				removeOres(chunkCoord);
+				tempMap.remove(entry);
+				tempMap.put(entry, true);
+			}
+			if(addedPoints.containsKey(entry) && addedPoints.get(entry)!=null)//if there is data here
+			{
+				if(Bukkit.getServer().getWorld("world").isChunkLoaded(chunkCoord.x, chunkCoord.z));//if chunk is loaded
 				{
 					drawList.put(entry,addedPoints.get(entry));
 					addedPoints.remove(entry);
 				}
 			}
 		}
+		for(String key : tempMap.keySet())
+		{
+			if(tempMap.get(key))
+			{
+				populatedList.remove(key);
+				populatedList.put(key, true);
+			}
+		}
 		return drawList;
 	}
 	
-	public static void savePopulatedList() 
-	{
-		VeinChunkReadWrite.write(populatedList);
-	}
-	public static void savePoints()
-	{
-		for(String entry : addedPoints.keySet())
-		{
-			VeinChunkReadWrite.write(entry, addedPoints.get(entry));
-		}
-		addedPoints.clear();
-	}
 	public static Boolean popMapExists(String entry)
 	{
 		if(populatedList.containsKey(entry))
@@ -195,25 +183,35 @@ public class PointMapping
 			return false;
 	}
 	
-	public static void refreshLoadedPoints() 
-	{
-		savePoints();
-		for(String entry : loadedAndGenerated.keySet())
-		{
-			addedPoints.put(entry,VeinChunkReadWrite.read(entry));
-		}
-	}
 	public static Boolean getPop(String string) 
 	{
 		return populatedList.get(string);
 	}
-	public static Boolean getLoaded(String string) 
-	{
-		return loadedAndGenerated.get(string);
-	}
-	public static String[][][] getPoints(String string) 
-	{
-		return addedPoints.get(string);
-	}
 
+	private static void removeOres(TwoPoint chunk)
+	{
+		Chunk theChunk = Bukkit.getServer().getWorld("world").getChunkAt(chunk.x,chunk.z);
+		Block block;
+		for (int x = 0; x < 16; x++)
+		{
+			for (int y = 1; y < 131; y++)
+			{
+				for (int z = 0; z < 16; z++)
+				{
+					block = theChunk.getBlock(x, y, z);
+					if (block.getType().compareTo(Material.COAL_ORE)==0 
+							|| block.getType().compareTo(Material.IRON_ORE)==0 
+							|| block.getType().compareTo(Material.GOLD_ORE)==0 
+							|| block.getType().compareTo(Material.LAPIS_ORE)==0 
+							|| block.getType().compareTo(Material.REDSTONE_ORE)==0 
+							|| block.getType().compareTo(Material.DIAMOND_ORE)==0 
+							|| block.getType().compareTo(Material.EMERALD_ORE)==0)
+					{
+						theChunk.getBlock(x, y, z).setType(Material.STONE);
+					}
+				}
+			}
+		}
+		theChunk.getWorld().refreshChunk(chunk.x, chunk.z);
+	}
 }

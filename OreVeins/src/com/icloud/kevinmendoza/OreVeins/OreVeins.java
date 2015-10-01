@@ -21,41 +21,53 @@
 package com.icloud.kevinmendoza.OreVeins;
 import geometryClasses.ThreePoint;
 import geometryClasses.TwoPoint;
+import geometryClasses.VeinMember;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 import mcListenersAndPopulators.EventListeners;
+import mcListenersAndPopulators.IdentifyOres;
 import oreClasses.MetamorphicSystem;
 import oreClasses.SedimentHostedDepositSystem;
 import oreClasses.VeinSystem;
 import oreClasses.VolcanicSystem;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
-import defaultPackadge.Defaults;
+import defaultPackadge.Default;
 
 
 public final class OreVeins extends JavaPlugin 
 {
 	File config;
 	FileConfiguration newConfigs;
+	public static Default theDefaults;
+	public static int veinsInProggress;
 	@Override
 	public void onEnable()
 	{
 		// TODO Insert logic to be performed when the plugin is enabled
-		getLogger().info("onEnable has been invoked!");
+		//getLogger().info("onEnable has been invoked!");
+		veinsInProggress = 0;
 		popFileTree();
 		getServer().getPluginManager().registerEvents(new EventListeners(), this);
-		PointMapping.populatePopList();
+		PointMapping.initializeMaps();
 		newConfigs = YamlConfiguration.loadConfiguration(config);
-		Defaults.popAndReadDefaults(newConfigs);
+		theDefaults = new Default(newConfigs);
 		saveNewConfig();
 	}
 
@@ -63,9 +75,8 @@ public final class OreVeins extends JavaPlugin
 	public void onDisable() 
 	{
 		// TODO Insert logic to be performed when the plugin is disabled
-		getLogger().info("onDisable has been invoked!");
-		PointMapping.savePoints();
-		PointMapping.savePopulatedList();
+		//getLogger().info("onDisable has been invoked!");
+		PointMapping.saveMaps();
 	}
 	
 	private void popFileTree()
@@ -73,13 +84,11 @@ public final class OreVeins extends JavaPlugin
 		File Ovein = new File("plugins/OreVeins");
 		config = new File("plugins/OreVeins.yml");
 		File popList = new File("plugins/OreVeins/popList.txt");
-		File ChunkInfo = new File("plugins/OreVeins/ChunkInfo");
 		try
 		{
 			Ovein.mkdir();
 			popList.createNewFile();
 			config.createNewFile();
-			ChunkInfo.mkdir();
 		}
 		catch (IOException e)
 		{ //Hooray for horrible programming practices!
@@ -98,6 +107,33 @@ public final class OreVeins extends JavaPlugin
 		}
 		catch(Exception e)
 		{
+		}
+	}
+	
+
+	public static void removeVeinCounter() 
+	{
+		veinsInProggress--;
+		//DebugLogger.console("counting down" + veinsInProggress);
+		if(veinsInProggress==0)
+		{
+			//DebugLogger.console("um.. ok its 0");
+			HashMap<String,VeinMember[][][]> drawableChunks = PointMapping.getDrawListAndRemove();
+			TwoPoint drawingChunk;
+			if(drawableChunks==null || drawableChunks.isEmpty())
+			{
+				//DebugLogger.console("um, what?");
+			}
+			Chunk chunkObj;
+			for(String entry: drawableChunks.keySet())
+			{
+				drawingChunk = new TwoPoint(entry);
+				chunkObj = Bukkit.getServer().getWorld("world").getChunkAt(drawingChunk.x, drawingChunk.z);
+				if(chunkObj!=null)
+				{
+					BukkitTask drawVein = new IdentifyOres(chunkObj,drawingChunk,drawableChunks.get(entry)).runTaskLaterAsynchronously(OreVeins.getPlugin(OreVeins.class),1);
+				}
+			}
 		}
 	}
 	

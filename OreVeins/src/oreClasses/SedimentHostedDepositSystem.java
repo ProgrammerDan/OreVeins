@@ -25,6 +25,10 @@ import geometryClasses.Line;
 import geometryClasses.ThreePoint;
 
 import java.util.ArrayList;
+import java.util.Random;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 
 import com.icloud.kevinmendoza.OreVeins.DebugLogger;
 import com.icloud.kevinmendoza.OreVeins.PointMapping;
@@ -36,16 +40,29 @@ public class SedimentHostedDepositSystem extends OreSuper
 	private int height;
 	private int grade;
 	private int levels;
+	public Random rand = new Random();
 	private ArrayList<ThreePoint> levelOffset;
-	public SedimentHostedDepositSystem(ThreePoint start, String ore)
+	
+	public SedimentHostedDepositSystem(ThreePoint start, String ore, String biome)
 	{
 		this.ore = ore;
+		dip = 5;
+		if(ore.contains("coal"))
+		{
+			this.material = Material.COAL_ORE;
+		}
+		else
+		{
+			this.material = Material.IRON_ORE;
+		}
 		this.start = start;
+		this.biome = biome;
 		initializeDefaults();
 		getPerpVector();
 		if(Line.distance(start, end) > 2)
 		{
 			this.end = Line.getEndPoint(start, strike, rand, false);
+			getActualDipStrike(start, end);
 			makeSystem();
 		}
 	}
@@ -81,30 +98,27 @@ public class SedimentHostedDepositSystem extends OreSuper
 			offset = levelOffset.get(randindex);
 			//DebugLogger.console(offset.toString());
 			addSection(offset);
-			PointMapping.addArrayToPoints(centers, this.ore);
-			drawPoints();
 		}
-		
+		pushToMainPointMap(material, this.centers);
 	}
 	
 	protected void initializeDefaults()
 	{
 		if(ore.contains("BIF"))
 		{
-			strike = (int) bif.strike.getRVar(rand);
-			width = (int) bif.width.getRVar(rand);
-			height = (int) bif.height.getRVar(rand);
-			grade = (int) (100/(bif.grade.getRVar(rand)));
-			levels = (int) bif.levels.getRVar(rand);
-			ore = "IRON";
+			strike = (int)Math.round(bif.modifiers.modifyStrike(biome, bif.strike.getRVar()));
+			width = (int) bif.width.getRVar();
+			height = (int) bif.height.getRVar();
+			grade = (int) (100/(bif.modifiers.modifyGrade(biome,bif.grade.getRVar())));
+			levels = (int) bif.levels.getRVar();
 		}
 		else if(ore.contains("COAL"))
 		{
-			strike = (int) coal.strike.getRVar(rand);
-			width = (int) coal.width.getRVar(rand);
-			height = (int) coal.height.getRVar(rand);
-			grade = (int) (100/(coal.grade.getRVar(rand)));
-			levels = (int) coal.levels.getRVar(rand);
+			strike = (int)Math.round(coal.modifiers.modifyStrike(biome, coal.strike.getRVar()));
+			width = (int) coal.width.getRVar();
+			height = (int) coal.height.getRVar();
+			grade = (int) (100/(coal.modifiers.modifyGrade(biome,coal.grade.getRVar())));
+			levels = (int) coal.levels.getRVar();
 		}
 		if(strike<50 && levels > 3)
 		{

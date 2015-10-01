@@ -53,12 +53,12 @@ public class Geode extends Shape
 		
 		Ellipsoid shell = new Ellipsoid(d+1,e+1,f+1);
 		Ellipsoid pocket = new Ellipsoid(dx,dy,dz);
-		//Random rand = new Random();
-		//int x = rand.nextInt(360);
-		//int y = rand.nextInt(360);
-		//int z = rand.nextInt(360);
-		//shell.rotateX(x);shell.rotateY(y); shell.rotateZ(z);
-		//pocket.rotateX(x);shell.rotateY(y); shell.rotateZ(z);
+		Random rand = new Random();
+		int x = rand.nextInt(360);
+		int y = rand.nextInt(360);
+		int z = rand.nextInt(360);
+		shell.rotateX(x);shell.rotateY(y); shell.rotateZ(z);
+		pocket.rotateX(x);shell.rotateY(y); shell.rotateZ(z);
 		theShell = new ArrayList<ThreePoint>();
 		createPointList(shell,pocket);
 		this.points = pocket.points;

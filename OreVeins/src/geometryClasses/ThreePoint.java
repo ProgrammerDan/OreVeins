@@ -50,11 +50,10 @@ public class ThreePoint extends Point
 		this.y =rand.nextInt(125)+2;
 		this.z =rand.nextInt(16);
 	}
-	public ThreePoint shiftCoords()
+	public void shiftCoords()
 	{
 		this.dx = (x%16+16)%16;
 		this.dz = (z%16+16)%16;
-		return null;
 	}
 	public void offSet(ThreePoint point)
 	{

@@ -45,6 +45,7 @@ public class Lapiz
 	public Grade grade;
 	public Branch branch;
 	public String string;
+	public BiomeModifiers modifiers;
 	public Lapiz() 
 	{
 		string = "LapizLazuliDeposit";
@@ -70,11 +71,13 @@ public class Lapiz
 		mineralizationlength.configPath = string + ".Zonelength";
 		grade        = new Grade(string);//grade of lodes
 		branch       = new Branch(string);;//number of lodes in deposit
+		modifiers = new BiomeModifiers(string);
 	}
 
 	public void setDefaults(FileConfiguration config)
 	{
 		setProbs(config);
+		modifiers.setDefaults(config);
 		grade.logValues(config);
 		branch.logValues(config);
 		mineralizationwidth.logValues(config);

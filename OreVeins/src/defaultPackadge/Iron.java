@@ -36,10 +36,12 @@ public class Iron
 	public double probToSpawn;
 	public String path = "IronVeinSystem";
 	public VeinSwitch chooseType;
+	public BiomeModifiers modifiers;
 	
 	public Iron()
 	{
 		probToSpawn = 1.2;
+		modifiers = new BiomeModifiers("IronVeinSystem");
 		primaryVein = new PrimaryVein("IronVeinSystem");
 		secondaryVein = new SecondaryVein("IronVeinSystem");
 		tertiaryVein = new TertiaryVein("IronVeinSystem");
@@ -48,6 +50,8 @@ public class Iron
 	public void readWriteConfigs(FileConfiguration configs)
 	{
 		setProbs(configs);
+		
+		modifiers.setDefaults(configs);
 		chooseType.logValues(configs);
 		primaryVein.setDefaults(configs);
 		secondaryVein.setDefaults(configs);

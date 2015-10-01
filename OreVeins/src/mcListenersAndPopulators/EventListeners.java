@@ -21,14 +21,13 @@
 package mcListenersAndPopulators;
 
 import java.util.HashMap;
+import java.util.List;
 
 import geometryClasses.TwoPoint;
 
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -36,59 +35,46 @@ import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldInitEvent;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.scheduler.BukkitTask;
 
 import com.icloud.kevinmendoza.OreVeins.DebugLogger;
+import com.icloud.kevinmendoza.OreVeins.OreVeins;
 import com.icloud.kevinmendoza.OreVeins.PointMapping;
 
 public final class EventListeners implements Listener 
 {
+
 	@EventHandler
 	public void onLoad(ChunkLoadEvent event) 
 	{
-		TwoPoint chunk = new TwoPoint(event.getChunk().getX(),event.getChunk().getZ(),true);
-		PointMapping.addToPoints(chunk);
-		if(PointMapping.popMapExists(chunk.toString()))
+		if (event.getWorld().getName().equalsIgnoreCase("world") && event.isNewChunk()) 
 		{
-			PointMapping.addToLoaded(chunk);
+			BukkitTask removeDefaultOres = new RemoveOreTask(event.getChunk()).runTask(OreVeins.getPlugin(OreVeins.class));
 		}
 	}
 	
 	@EventHandler 
 	public void  onUnload(ChunkUnloadEvent event)
 	{
-		TwoPoint chunk = new TwoPoint(event.getChunk().getX(),event.getChunk().getZ(),true);
-		PointMapping.removeFromLoaded(chunk);
 	}
 	@EventHandler
 	public void onInit(WorldInitEvent event) 
 	{
-		event.getWorld().getPopulators().add(new OreReplacer());
+		
 	}
 	@EventHandler
 	public void onGenerate(ChunkPopulateEvent event) 
 	{
-		TwoPoint chunk = new TwoPoint(event.getChunk().getX(),event.getChunk().getZ(),true);
-		OreGenerator.GenerateOres(chunk);
-		PointMapping.addToLoaded(chunk);
-		HashMap<String,String[][][]> drawableChunks = PointMapping.getDrawListAndRemove();
-		TwoPoint drawingChunk;
-		Chunk chunkObj;
-		if(!drawableChunks.isEmpty())
+		if(event.getWorld().getEnvironment().toString().contains("NORMAL"))
 		{
-			for(String entry: drawableChunks.keySet())
-			{
-				drawingChunk = new TwoPoint(entry);
-				chunkObj = Bukkit.getWorlds().get(0).getChunkAt(drawingChunk.x, drawingChunk.z);
-				if(drawableChunks.get(entry)!=null)
-				{
-					VeinDrawer.drawVein(drawableChunks.get(entry), chunkObj);
-				}
-			}
+			TwoPoint chunk = new TwoPoint(event.getChunk().getX(),event.getChunk().getZ(),true);
+			OreGenerator.GenerateOres(chunk);
 		}
 	}
 	@EventHandler
 	public void onPlayerLogout(PlayerQuitEvent event)
 	{
-		PointMapping.refreshLoadedPoints();
+		//PointMapping.refreshLoadedPoints();
 	}
 }

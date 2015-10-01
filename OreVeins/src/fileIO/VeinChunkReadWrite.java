@@ -24,12 +24,15 @@ package fileIO;
 //annd yeah, i mean its pretty simple
 
 
+import geometryClasses.VeinMember;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -58,7 +61,7 @@ public class VeinChunkReadWrite
 		}
 	}
 	
-	public static HashMap<String,Boolean> read()
+	public static HashMap<String,Boolean> readList()
 	{
 		try{
 		FileInputStream fin;
@@ -99,56 +102,57 @@ public class VeinChunkReadWrite
 		}
 	}
 
-	public static String[][][] read(String key)
+	public static HashMap<String, VeinMember[][][]> readPoints()
 	{
-		try 
-		{
-			FileInputStream chunkdir;
-			File veinFile = new File("plugins/OreVeins/ChunkInfo/"+ key +".txt");
-			veinFile.createNewFile();
-			chunkdir = new FileInputStream("plugins/OreVeins/ChunkInfo/"+key+".txt");
-			ObjectInputStream ois = new ObjectInputStream(chunkdir);
+		try{
+			FileInputStream fin;
+			File popListFile = new File("plugins/OreVeins/pointList.txt");
+			popListFile.createNewFile();
+			fin = new FileInputStream("plugins/OreVeins/pointList.txt");
+			ObjectInputStream ois = new ObjectInputStream(fin);
 			Object obj =  ois.readObject();
 			ois.close();
-			chunkdir.close();
-			delete("plugins/OreVeins/ChunkInfo/"+ key +".txt");
-			String[][][] test = new String[16][128][16];
-			if(test.getClass() == obj.getClass() )
-			{
-				try
+			fin.close();
+			HashMap<String,VeinMember[][][]> theMap = new HashMap<String,VeinMember[][][]>();
+			
+				if(theMap.getClass() == obj.getClass() )
 				{
-					String[][][] points = (String[][][] ) obj;
-					//DebugLogger.console("successful fetch!");
-					delete("plugins/OreVeins/ChunkInfo/"+key+".txt");
-					return points;
+					try
+					{
+						HashMap<String,VeinMember[][][]> popList = (HashMap<String,VeinMember[][][]>) obj;
+						//DebugLogger.console("successful fetch!");
+						delete("plugins/OreVeins/pointList.txt");
+						return popList;
+					}
+					catch (Exception e)
+					{
+						DebugLogger.console("ERROR!!1");
+						return null;
+					}
+
 				}
-				catch (Exception e)
+				else
 				{
-					DebugLogger.console("ERROR!!1");
+					DebugLogger.console("ERROR!!2");
 					return null;
 				}
-
 			}
-			else
+			catch (Exception ex)
 			{
-				DebugLogger.console("ERROR!!2");
 				return null;
 			}
-		}
-		catch (Exception ex)
-		{
-			return null;
-		}
 	}
-
-	public static void write(String key, String[][][] points)
+	
+	public static void saveMaps(HashMap<String,VeinMember[][][]> points,HashMap<String,Boolean> popList)
 	{
+		delete("plugins/OreVeins/pointList.txt");
+		delete("plugins/OreVeins/popList.txt");
 		try 
 		{
 			FileOutputStream chunkdir;
-			File veinFile = new File("plugins/OreVeins/ChunkInfo/"+ key +".txt");
+			File veinFile = new File("plugins/OreVeins/pointList.txt");
 			veinFile.createNewFile();
-			chunkdir = new FileOutputStream("plugins/OreVeins/ChunkInfo/"+key+".txt");
+			chunkdir = new FileOutputStream("plugins/OreVeins/pointList.txt");
 			ObjectOutputStream chunkOut = new ObjectOutputStream(chunkdir);
 			chunkOut.writeObject(points);
 			chunkdir.close();
@@ -158,10 +162,7 @@ public class VeinChunkReadWrite
 		{
 			DebugLogger.console("can't save dir, chunk key is missing");
 		}
-	}
-	
-	public static void write(HashMap<String,Boolean> popList)
-	{
+		
 		try 
 		{
 			FileOutputStream chunkdir;
@@ -178,5 +179,6 @@ public class VeinChunkReadWrite
 			DebugLogger.console("Couldn't save popList. Dir is missing");
 		}
 	}
+
 	
 }

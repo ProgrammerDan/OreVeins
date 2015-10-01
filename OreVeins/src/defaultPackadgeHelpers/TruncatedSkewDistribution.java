@@ -22,6 +22,8 @@ package defaultPackadgeHelpers;
 
 import java.util.Random;
 
+import net.minecraft.util.io.netty.util.internal.ThreadLocalRandom;
+
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class TruncatedSkewDistribution 
@@ -69,13 +71,14 @@ public class TruncatedSkewDistribution
 		}
 	}
 	
-	public double getRVar(Random rand)
+	public double getRVar()
 	{	
 	        double range = max - min;
 	        double mid = min + ( range / 2.0);
-	        double unitGaussian = rand.nextGaussian();
+	        double unitGaussian = ThreadLocalRandom.current().nextGaussian();
 	        double biasFactor = Math.exp(bias);
 	        double retval = mid+(range*(biasFactor/(biasFactor+Math.exp(-unitGaussian/skew))-0.5));
 	        return retval;
 	}
+	
 }

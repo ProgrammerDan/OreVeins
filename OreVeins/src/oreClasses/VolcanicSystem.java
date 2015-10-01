@@ -21,11 +21,16 @@
 package oreClasses;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 
 import com.icloud.kevinmendoza.OreVeins.DebugLogger;
+import com.icloud.kevinmendoza.OreVeins.OreVeins;
 import com.icloud.kevinmendoza.OreVeins.PointMapping;
+
+import defaultPackadge.Default;
 
 import geometryClasses.Paraboloid;
 import geometryClasses.ThreePoint;
@@ -38,12 +43,17 @@ public class VolcanicSystem extends OreSuper
 	public int grade;
 	public int branch;
 	public double branchfreq;
+	public Random rand = new Random();
 	
-	public VolcanicSystem(ThreePoint start,String ore)
+	public VolcanicSystem(ThreePoint start,String ore, String biome,int theheight)
 	{
 		start.y=2;
+		dip = 7;
+		this.material = Material.DIAMOND_ORE;
+		this.biome = biome;
 		initializeDefaults();
-		int height = Bukkit.getServer().getWorld("world").getHighestBlockAt(start.x, start.z).getY();
+		grade = (int)Math.round(diamond.modifiers.modifyGrade(biome, (double)grade));
+		int height = theheight;
 		centers = new ArrayList<ThreePoint>();
 		branchfreq = 1/(double)(branch);
 		Paraboloid shape = new Paraboloid(change, offset,height);
@@ -53,8 +63,8 @@ public class VolcanicSystem extends OreSuper
 			point.offSet(start);
 			addSection(point);
 		}
-		PointMapping.addArrayToPoints(centers, ore);
-		drawPoints();
+		pushToMainPointMap(material, centers);
+		
 	}
 
 	@Override
@@ -68,12 +78,13 @@ public class VolcanicSystem extends OreSuper
 
 	protected void initializeDefaults()
 	{
-		offset = new TwoPoint((int)(diamond.diatreme.offsetx.getRVar(rand))
-				, (int)(diamond.diatreme.offsety.getRVar(rand)), false);
-		change = new TwoPoint((int)(diamond.diatreme.changex.getRVar(rand))
-				, (int)(diamond.diatreme.changey.getRVar(rand)), false);
-		grade = (int)(100/(diamond.diatreme.grade.getRVar(rand)));
-		branch = (int)(diamond.veinDikes.branch.getRVar(rand));
+		offset = new TwoPoint((int)(diamond.diatreme.offsetx.getRVar())
+				, (int)(diamond.diatreme.offsety.getRVar()), false);
+		change = new TwoPoint((int)(diamond.diatreme.changex.getRVar())
+				, (int)(diamond.diatreme.changey.getRVar()), false);
+		grade = (int)(100/(diamond.diatreme.grade.getRVar()));
+		branch = (int)(diamond.veinDikes.branch.getRVar());
+		grade = (int)Math.round(diamond.modifiers.modifyGrade(biome, (double)grade));
 	}
 
 	@Override

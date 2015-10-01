@@ -20,6 +20,13 @@
  *******************************************************************************/
 package oreClasses;
 
+import java.util.Random;
+
+import net.minecraft.util.io.netty.util.internal.ThreadLocalRandom;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+
 import com.icloud.kevinmendoza.OreVeins.PointMapping;
 
 import geometryClasses.Ellipsoid;
@@ -31,9 +38,13 @@ public class MetamorphicSystem extends OreSuper
 	public int height;
 	public int depth;
 	public int branch;
-
-	public MetamorphicSystem(ThreePoint start)
+	public Random rand = new Random();
+	public MetamorphicSystem(ThreePoint start, String biome)
 	{
+		this.material = Material.LAPIS_ORE;
+		this.start = start;
+		this.biome = biome;
+		dip = 6;
 		initializeDefaults();
 		Ellipsoid theMetaArea = new Ellipsoid(width,height,depth);
 		int size = theMetaArea.points.length;
@@ -45,28 +56,27 @@ public class MetamorphicSystem extends OreSuper
 			tempPoint = new ThreePoint(theMetaArea.points[iteration]);
 			tempPoint.offSet(start);
 			addSection(tempPoint);
-			PointMapping.addArrayToPoints(centers, "LAPIZ");
 		}
-		drawPoints();
+		pushToMainPointMap(material, centers);
 	}
 	
 	protected void initializeDefaults()
 	{
-		width = (int) lapiz.mineralizationwidth.getRVar(rand);
-		height = (int) lapiz.mineralizationlength.getRVar(rand);
-		depth = (int) lapiz.mineralizationdepth.getRVar(rand);
-		branch = (int) lapiz.branch.getRVar(rand);
+		width = (int) lapiz.mineralizationwidth.getRVar();
+		height = (int) lapiz.mineralizationlength.getRVar();
+		depth = (int) lapiz.mineralizationdepth.getRVar();
+		branch = (int) lapiz.branch.getRVar();
 	}
 
 	@Override
 	protected void addSection(ThreePoint centerPoint) 
 	{
-		int a = (int) lapiz.lodedepth.getRVar(rand);
-		int b = (int) lapiz.lodelength.getRVar(rand);
-		int c =  (int) lapiz.lodewidth.getRVar(rand);
-		int grade = (int)(100/lapiz.grade.getRVar(rand));
+		int a = (int) lapiz.lodedepth.getRVar();
+		int b = (int) lapiz.lodelength.getRVar();
+		int c =  (int) lapiz.lodewidth.getRVar();
+		int grade = (int)(100/lapiz.modifiers.modifyGrade(biome, lapiz.grade.getRVar()));
 		Ellipsoid soid = new Ellipsoid(a,b,c);
-		soid.rotateRandom(rand);
+		soid.rotateRandom(ThreadLocalRandom.current());
 		for(int i=0;i<soid.points.length;i++)
 		{
 			if(rand.nextInt(grade)==0)

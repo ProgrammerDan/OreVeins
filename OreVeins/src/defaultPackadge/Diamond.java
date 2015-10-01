@@ -34,6 +34,7 @@ public class Diamond
 	public double probToSpawn;
 	public PrimaryVein veinDikes;
 	public Diatreme diatreme;
+	public BiomeModifiers modifiers;
 	private String path = "DiamondVeinSystem";
 	private int type =1;
 	public Diamond()
@@ -41,6 +42,7 @@ public class Diamond
 		probToSpawn = 0.15;
 		veinDikes = new PrimaryVein(path);
 		diatreme = new Diatreme(path);
+		modifiers = new BiomeModifiers(path);
 	}
 	
 	public int getType()
@@ -50,6 +52,7 @@ public class Diamond
 	public void readWriteConfigs(FileConfiguration configs)
 	{
 		setProbs(configs);
+		modifiers.setDefaults(configs);
 		diatreme.setDefaults(configs);
 		veinDikes.setDefaults(configs);
 	}
