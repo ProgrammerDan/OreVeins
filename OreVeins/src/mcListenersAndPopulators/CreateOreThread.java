@@ -3,7 +3,7 @@ import java.util.Random;
 
 import geometryClasses.ThreePoint;
 
-import net.minecraft.util.io.netty.util.internal.ThreadLocalRandom;
+import io.netty.util.internal.ThreadLocalRandom;
 import oreClasses.MetamorphicSystem;
 import oreClasses.OreDoneTask;
 import oreClasses.SedimentHostedDepositSystem;

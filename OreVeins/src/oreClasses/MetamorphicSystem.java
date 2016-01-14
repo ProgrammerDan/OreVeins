@@ -22,7 +22,7 @@ package oreClasses;
 
 import java.util.Random;
 
-import net.minecraft.util.io.netty.util.internal.ThreadLocalRandom;
+import io.netty.util.internal.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
